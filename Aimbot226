@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local Enabled = false
+local Range = 200
+
+-- UI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "SkyAimbotGUI"
+
+local Button = Instance.new("TextButton", ScreenGui)
+Button.Size = UDim2.new(0, 160, 0, 50)
+Button.Position = UDim2.new(0, 20, 0, 200)
+Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.Font = Enum.Font.SourceSansBold
+Button.TextSize = 20
+Button.Text = "Aimbot: OFF"
+Button.BorderSizePixel = 0
+
+-- Drag variables
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+Button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Button.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if dragging and dragInput then
+        local delta = dragInput.Position - dragStart
+        Button.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Toggle aimbot ON/OFF
+Button.MouseButton1Click:Connect(function()
+    Enabled = not Enabled
+    Button.Text = Enabled and "Aimbot: ON" or "Aimbot: OFF"
+    Button.BackgroundColor3 = Enabled and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(40, 40, 40)
+end)
+
+-- Trouver la cible la plus proche
+local function getClosestTarget()
+    local closest, shortest = nil, Range
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local targetPart = p.Character:FindFirstChild("Head") or p.Character:FindFirstChild("HumanoidRootPart")
+            if targetPart then
+                local dist = (targetPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                if dist < shortest then
+                    closest = targetPart
+                    shortest = dist
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- Boucle Aimbot + Caméra
+RunService.RenderStepped:Connect(function()
+    if Enabled then
+        local target = getClosestTarget()
+        if target then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+            local pos = Camera:WorldToViewportPoint(target.Position)
+            local dx, dy = pos.X - Mouse.X, pos.Y - Mouse.Y
+            pcall(function()
+                mousemoverel(dx, dy)
+            end)
+        end
+    end
+end)
+
+print("✅ SkyMan Aimbot précis (cible tête ou HRP) activé")
