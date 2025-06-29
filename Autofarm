@@ -1,0 +1,79 @@
+--[[ 
+   CNDE Mobile - Clean N' Deadly Exploit (Mobile Version)
+   Optimisé pour exécuteurs mobiles (Hydrogen, Delta, Arceus X)
+   by SkyMan
+]]
+
+-- Interface simple (Hydrogen Friendly)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/venyx"))()
+local Venyx = Library.new("CNDE | Mobile Edition", 5013109572)
+
+local Pages = {
+    main = Venyx:addPage("Auto-Farm", 5012544693),
+    trials = Venyx:addPage("Trials", 5012544693),
+    fruits = Venyx:addPage("Fruits", 5012544693),
+    tools = Venyx:addPage("Utilitaires", 5012544693),
+    credits = Venyx:addPage("Crédit", 5012544693)
+}
+
+-- Auto-Farm
+local sectionFarm = Pages.main:addSection("Auto-Farm")
+sectionFarm:addToggle("Activer Auto-Farm", false, function(value)
+    getgenv().AutoFarm = value
+    while getgenv().AutoFarm do
+        task.wait()
+        -- Met ici ton script de farm
+    end
+end)
+
+-- Trials
+local sectionTrials = Pages.trials:addSection("Auto Trials")
+sectionTrials:addToggle("Auto Finish Trials", false, function(value)
+    getgenv().AutoTrial = value
+    while getgenv().AutoTrial do
+        task.wait()
+        -- Met ici ton script de trial
+    end
+end)
+
+-- Fruits
+local sectionFruits = Pages.fruits:addSection("Stock / Fruits Perm")
+
+sectionFruits:addButton("📦 Voir stock de fruits", function()
+    local stock = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("getStock")
+    local msg = "Stock Blox Fruits:\\n"
+    for _,fruit in pairs(stock) do
+        msg = msg .. fruit["Name"] .. " - " .. (fruit["InStock"] and "✅" or "❌") .. "\\n"
+    end
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Stock Fruits",
+        Text = msg,
+        Duration = 10
+    })
+end)
+
+sectionFruits:addButton("🎁 Fruits permanents", function()
+    local fruits = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("GetFruits")
+    local owned = "Fruits permanents :\\n"
+    for _,f in pairs(fruits) do
+        if f["Permanent"] then
+            owned = owned .. f["Name"] .. "\\n"
+        end
+    end
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "Fruits Perms",
+        Text = owned,
+        Duration = 10
+    })
+end)
+
+-- Utilitaires
+local sectionUtils = Pages.tools:addSection("TP / Autres")
+sectionUtils:addButton("TP Sea Castle", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-28799, 746, -13009)
+end)
+
+-- Crédit
+Pages.credits:addSection("Script by SkyMan")
+
+Venyx:SelectPage(Pages.main, true)
