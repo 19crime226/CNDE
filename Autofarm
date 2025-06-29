@@ -1,40 +1,40 @@
---[[ 
-   CNDE - Clean N' Deadly Exploit
-   Script Roblox pour Blox Fruits (Version stable et complète)
-   Interface stylisée Rayfield UI
-   by SkyMan
-]]
+-- Auto-Farm Blox Fruits corrigé by SkyMan
 
--- Chargement de Rayfield UI
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua'))()
+local player = game.Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
-local Window = Rayfield:CreateWindow({
-    Name = "🌊 CNDE | Blox Fruits - SkyMan",
-    LoadingTitle = "Chargement de CNDE...",
-    LoadingSubtitle = "Optimisé pour mobile",
-    ConfigurationSaving = {
-       Enabled = true,
-       FolderName = "CNDE",
-       FileName = "CNDE_Config"
-    },
-    Discord = {
-       Enabled = false
-    },
-    KeySystem = false
-})
+-- Fonction pour équiper le meilleur outil (arme)
+local function EquipWeapon()
+    local backpack = player.Backpack
+    local character = player.Character or player.CharacterAdded:Wait()
+    local tool = character:FindFirstChildOfClass("Tool") or backpack:FindFirstChildOfClass("Tool")
+    if tool then
+        tool.Parent = character
+    end
+end
 
--- Auto-Farm
-local FarmTab = Window:CreateTab("🌱 Auto-Farm", 4483362458)
-FarmTab:CreateToggle({
-    Name = "Activer Auto-Farm",
-    CurrentValue = false,
-    Callback = function(state)
-        getgenv().AutoFarm = state
+-- Fonction pour activer Haki (si disponible)
+local function AutoHaki()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF")
+    pcall(function()
+        CommF:InvokeServer("Haki")
+    end)
+end
+
+getgenv().AutoFarm = false
+
+function StartAutoFarm()
+    getgenv().AutoFarm = true
+
+    spawn(function()
         while getgenv().AutoFarm do
-            task.wait()
-            local player = game.Players.LocalPlayer
+            task.wait(0.5)
             local character = player.Character
             local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            if not hrp then continue end
+
+            -- Chercher un ennemi vivant dans workspace.Enemies
             local enemy = nil
             for _, v in pairs(workspace.Enemies:GetChildren()) do
                 if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
@@ -42,63 +42,50 @@ FarmTab:CreateToggle({
                     break
                 end
             end
-            if enemy and hrp then
+
+            if enemy then
+                EquipWeapon()
+                AutoHaki()
+                -- Se téléporter au-dessus de l'ennemi
                 hrp.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
-                if character:FindFirstChildOfClass("Tool") then
-                    character:FindFirstChildOfClass("Tool"):Activate()
+                -- Attaquer
+                local tool = character:FindFirstChildOfClass("Tool")
+                if tool and tool:FindFirstChild("Activate") == nil then -- Vérifier que c'est un outil utilisable
+                    tool:Activate()
+                elseif tool and tool.Activate then
+                    tool:Activate()
                 end
+            else
+                -- Pas d'ennemi vivant, attendre un peu
+                task.wait(2)
             end
         end
-    end
-})
+    end)
+end
 
--- Fruits
-local FruitTab = Window:CreateTab("🍎 Fruits", 4483362458)
-FruitTab:CreateButton({
-    Name = "📦 Voir le stock de fruits",
-    Callback = function()
-        local stock = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("getStock")
-        local message = "Stock des fruits :\\n"
-        for _,fruit in pairs(stock) do
-            message = message .. fruit["Name"] .. " - " .. (fruit["InStock"] and "✅" or "❌") .. "\\n"
+function StopAutoFarm()
+    getgenv().AutoFarm = false
+end
+
+-- Exemple d'utilisation :
+-- StartAutoFarm()  -- Pour démarrer l'auto-farm
+-- StopAutoFarm()   -- Pour arrêter
+
+-- Pour faciliter, créer un toggle UI simple (à coller dans ton exécuteur):
+
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua'))()
+local Window = Rayfield:CreateWindow({Name = "AutoFarm Blox Fruits by SkyMan"})
+
+local Tab = Window:CreateTab("AutoFarm")
+
+Tab:CreateToggle({
+    Name = "Activer AutoFarm",
+    CurrentValue = false,
+    Callback = function(value)
+        if value then
+            StartAutoFarm()
+        else
+            StopAutoFarm()
         end
-        Rayfield:Notify({
-            Title = "Stock Fruits",
-            Content = message,
-            Duration = 10
-        })
     end
-})
-FruitTab:CreateButton({
-    Name = "🎁 Fruits permanents possédés",
-    Callback = function()
-        local owned = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("GetFruits")
-        local message = "Fruits permanents :\\n"
-        for _,fruit in pairs(owned) do
-            if fruit["Permanent"] then
-                message = message .. fruit["Name"] .. "\\n"
-            end
-        end
-        Rayfield:Notify({
-            Title = "Fruits Perms",
-            Content = message,
-            Duration = 10
-        })
-    end
-})
-
--- TP Utilitaire
-local UtilsTab = Window:CreateTab("🛠️ Téléportations", 4483362458)
-UtilsTab:CreateButton({
-    Name = "TP Sea Castle",
-    Callback = function()
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-28799, 746, -13009)
-    end
-})
-
--- Crédit
-local CreditTab = Window:CreateTab("👑 Crédit")
-CreditTab:CreateParagraph({
-    Title = "SkyMan",
-    Content = "Créateur du script CNDE\\nOptimisé pour Blox Fruits mobile"
 })
