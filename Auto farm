@@ -1,0 +1,104 @@
+--[[ 
+   CNDE - Clean N' Deadly Exploit
+   Script Roblox pour Blox Fruits (Version stable et complète)
+   Interface stylisée Rayfield UI
+   by SkyMan
+]]
+
+-- Chargement de Rayfield UI
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "🌊 CNDE | Blox Fruits - SkyMan",
+    LoadingTitle = "Chargement de CNDE...",
+    LoadingSubtitle = "Optimisé pour mobile",
+    ConfigurationSaving = {
+       Enabled = true,
+       FolderName = "CNDE",
+       FileName = "CNDE_Config"
+    },
+    Discord = {
+       Enabled = false
+    },
+    KeySystem = false
+})
+
+-- Auto-Farm
+local FarmTab = Window:CreateTab("🌱 Auto-Farm", 4483362458)
+FarmTab:CreateToggle({
+    Name = "Activer Auto-Farm",
+    CurrentValue = false,
+    Callback = function(state)
+        getgenv().AutoFarm = state
+        while getgenv().AutoFarm do
+            task.wait()
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            local hrp = character and character:FindFirstChild("HumanoidRootPart")
+            local enemy = nil
+            for _, v in pairs(workspace.Enemies:GetChildren()) do
+                if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                    enemy = v
+                    break
+                end
+            end
+            if enemy and hrp then
+                hrp.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)
+                if character:FindFirstChildOfClass("Tool") then
+                    character:FindFirstChildOfClass("Tool"):Activate()
+                end
+            end
+        end
+    end
+})
+
+-- Fruits
+local FruitTab = Window:CreateTab("🍎 Fruits", 4483362458)
+FruitTab:CreateButton({
+    Name = "📦 Voir le stock de fruits",
+    Callback = function()
+        local stock = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("getStock")
+        local message = "Stock des fruits :\\n"
+        for _,fruit in pairs(stock) do
+            message = message .. fruit["Name"] .. " - " .. (fruit["InStock"] and "✅" or "❌") .. "\\n"
+        end
+        Rayfield:Notify({
+            Title = "Stock Fruits",
+            Content = message,
+            Duration = 10
+        })
+    end
+})
+FruitTab:CreateButton({
+    Name = "🎁 Fruits permanents possédés",
+    Callback = function()
+        local owned = require(game:GetService("ReplicatedStorage").Remotes.CommF):InvokeServer("GetFruits")
+        local message = "Fruits permanents :\\n"
+        for _,fruit in pairs(owned) do
+            if fruit["Permanent"] then
+                message = message .. fruit["Name"] .. "\\n"
+            end
+        end
+        Rayfield:Notify({
+            Title = "Fruits Perms",
+            Content = message,
+            Duration = 10
+        })
+    end
+})
+
+-- TP Utilitaire
+local UtilsTab = Window:CreateTab("🛠️ Téléportations", 4483362458)
+UtilsTab:CreateButton({
+    Name = "TP Sea Castle",
+    Callback = function()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-28799, 746, -13009)
+    end
+})
+
+-- Crédit
+local CreditTab = Window:CreateTab("👑 Crédit")
+CreditTab:CreateParagraph({
+    Title = "SkyMan",
+    Content = "Créateur du script CNDE\\nOptimisé pour Blox Fruits mobile"
+})
