@@ -1,0 +1,92 @@
+-- 🔥 Script by 19crime  - Kitsune Island Auto Ember Collector
+
+-- 📦 Interface Kavo UI
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("🦊 Kitsune Ember | 19crime Edition", "DarkTheme")
+
+-- 🔔 Notification de branding
+game.StarterGui:SetCore("SendNotification", {
+    Title = "🔥 19crime",
+    Text = "Script lancé avec succès par 19crime",
+    Duration = 6
+})
+
+-- 🗂️ Onglets
+local Tab = Window:NewTab("Kitsune Island")
+local Section = Tab:NewSection("🎯 Ember AutoFarm")
+local MoonSection = Tab:NewSection("🌙 Pleine Lune")
+local UISection = Tab:NewSection("⚙️ Réglages UI")
+local CreditSection = Tab:NewSection("👑 Par 19crime ©")
+
+-- 🌙 Affichage de la lune
+local MoonLabel = MoonSection:NewLabel("Chargement...")
+
+spawn(function()
+    while true do
+        local time = game.Lighting.ClockTime
+        if time >= 18 and time <= 18.5 then
+            MoonLabel:UpdateLabel("Lune : 🌕 Pleine lune active !")
+        else
+            MoonLabel:UpdateLabel("Lune : 🌑 Ce n’est pas encore la pleine lune")
+        end
+        wait(1)
+    end
+end)
+
+-- 🔁 Ember Farm Auto
+local StatusLabel = Section:NewLabel("État : ❌ Inactif")
+_G.AutoEmberFarm = false
+
+function collectEmbers()
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character or plr.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    for _, ember in pairs(game.Workspace:GetChildren()) do
+        if ember:IsA("Model") and ember:FindFirstChild("TouchInterest") and ember.Name == "Ember" then
+            hrp.CFrame = ember.CFrame + Vector3.new(0, 3, 0)
+            wait(0.2)
+        end
+    end
+end
+
+Section:NewToggle("🔁 Ramassage Auto des Embers", "Active ou désactive l’auto farm", function(state)
+    _G.AutoEmberFarm = state
+    StatusLabel:UpdateLabel("État : " .. (state and "✅ Actif" or "❌ Inactif"))
+
+    if state then
+        spawn(function()
+            while _G.AutoEmberFarm do
+                pcall(collectEmbers)
+                wait(0.5)
+            end
+        end)
+    end
+end)
+
+-- 📏 Réglage taille UI
+UISection:NewButton("📉 Réduire la taille", "Interface plus petite", function()
+    for _, v in pairs(game.CoreGui:GetDescendants()) do
+        if v:IsA("Frame") and v.Name == "MainFrame" then
+            v.Size = UDim2.new(0, 400, 0, 250)
+        end
+    end
+end)
+
+UISection:NewButton("📈 Agrandir la taille", "Interface plus grande", function()
+    for _, v in pairs(game.CoreGui:GetDescendants()) do
+        if v:IsA("Frame") and v.Name == "MainFrame" then
+            v.Size = UDim2.new(0, 600, 0, 400)
+        end
+    end
+end)
+
+-- 🧲 Interface déplaçable
+spawn(function()
+    for _, v in pairs(game.CoreGui:GetDescendants()) do
+        if v:IsA("Frame") and v.Name == "MainFrame" then
+            v.Active = true
+            v.Draggable = true
+        end
+    end
+end)
